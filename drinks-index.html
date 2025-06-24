@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <header>
+
+        <a href="" class="logo">LOGO</a>
+
+        <nav>
+            <ul>
+                <li><a href="breakfast-index.html">Сніданки</a></li>
+
+                <li><a href="snacks-index.html">Закуски</a></li>
+
+                <li><a href="#">Основна подача &blacktriangledown;</a>
+                    <ul>
+                        <li><a href="first-dishes-index.html">Перші страви</a></li>
+                        <li><a href="main-dishes-index.html">Основні страви</a></li>
+                    </ul>
+                </li>
+
+                <li><a href="#">Фаст-фуд &blacktriangledown;</a>
+                    <ul>
+                        <li><a href="burgers-index.html">Бургери</a></li>
+                        <li><a href="pizza-index.html">Піца</a></li>
+                    </ul>
+                </li>
+                    
+                <li><a href="sauce-index.html">Соус</a></li>
+
+                <li><a href="drinks-index.html">Напої</a>
+                </li>
+            </ul>
+        </nav>
+        <button id="open-cart-btn" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">
+            🛒
+        </button>
+    </header>
+    <main>
+        <ul class="product-grid">
+            <li class="product-card">
+                <img src="images/drink-1.jpg" alt="">
+                <h3>Чай зелений</h3>
+                <p class="price">40 ₴</p>
+                <button>У КОРЗИНУ</button>
+            </li>
+            <li class="product-card">
+                <img src="images/drink-2.jpg" alt="">
+                <h3>Чай чорний</h3>
+                <p class="price">40 ₴</p>
+                <button>У КОРЗИНУ</button>
+            </li>
+            <li class="product-card">
+                <img src="images/drink-3.jpg" alt="">
+                <h3>Кава</h3>
+                <p class="price">50 ₴</p>
+                <button>У КОРЗИНУ</button>
+            </li>
+            <li class="product-card">
+                <img src="images/drink-4.jpg" alt="">
+                <h3>Пиво</h3>
+                <p class="price">50 ₴</p>
+                <button>У КОРЗИНУ</button>
+            </li>
+        </ul>
+    </main>
+    <div id="cart-sidebar" class="cart-sidebar">
+    <div class="cart-header">
+        <h2>Корзина</h2>
+        <span class="close-btn">&times;</span>
+    </div>
+    <ul id="cart-items" class="cart-items"></ul>
+    <div class="cart-footer">
+        <p><strong>Загальна сума: </strong><span id="cart-total">0 ₴</span></p>
+        <button id="order-btn" style="margin-top: 15px;">Замовити</button>
+    </div>
+</div>
+<script>
+        const savedCart = localStorage.getItem("cart");
+    const cart = savedCart ? JSON.parse(savedCart) : {};
+
+    function saveCart() {
+        localStorage.setItem("cart", JSON.stringify(cart));
+    }
+
+    const cartSidebar = document.getElementById("cart-sidebar");
+    const openCartBtn = document.getElementById("open-cart-btn");
+    const closeCartBtn = document.querySelector(".close-btn");
+    const cartItemsElement = document.getElementById("cart-items");
+    const cartTotalElement = document.getElementById("cart-total");
+
+    openCartBtn.onclick = () => {
+        updateCart();
+        cartSidebar.classList.add("open");
+    };
+
+    closeCartBtn.onclick = () => {
+        cartSidebar.classList.remove("open");
+    };
+
+    window.onclick = (e) => {
+        if (e.target === cartSidebar) {
+            cartSidebar.classList.remove("open");
+        }
+    };
+
+    function updateCart() {
+        cartItemsElement.innerHTML = "";
+        let total = 0;
+
+        for (const [name, item] of Object.entries(cart)) {
+            const itemTotal = item.price * item.quantity;
+            total += itemTotal;
+
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${name}">
+                    <div class="cart-item-details">
+                        <strong>${name}</strong>
+                        <div class="qty-controls">
+                            <button class="decrease-btn" data-name="${name}">−</button>
+                            <span>${item.quantity}</span>
+                            <button class="increase-btn" data-name="${name}">+</button>
+                        </div>
+                        <div>${item.price} ₴ × ${item.quantity} = ${itemTotal} ₴</div>
+                    </div>
+                </div>
+            `;
+            cartItemsElement.appendChild(li);
+        }
+
+        cartTotalElement.textContent = total + " ₴";
+        saveCart();
+        addQtyListeners();
+    }
+
+    function addQtyListeners() {
+        document.querySelectorAll(".increase-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const name = btn.dataset.name;
+                cart[name].quantity++;
+                updateCart();
+            });
+        });
+
+        document.querySelectorAll(".decrease-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const name = btn.dataset.name;
+                if (cart[name].quantity > 1) {
+                    cart[name].quantity--;
+                } else {
+                    delete cart[name];
+                }
+                updateCart();
+            });
+        });
+    }
+
+    document.querySelectorAll(".product-card").forEach(card => {
+        card.querySelector("button").addEventListener("click", () => {
+            const name = card.querySelector("h3").textContent;
+            const price = parseInt(card.querySelector(".price").textContent);
+            const image = card.querySelector("img").getAttribute("src");
+
+            if (cart[name]) {
+                cart[name].quantity++;
+            } else {
+                cart[name] = { price: price, quantity: 1, image: image };
+            }
+
+            saveCart();
+            updateCart();
+        });
+    });
+
+    updateCart();
+    
+    const BOT_TOKEN = '7723422016:AAEm1EbI8VcwK7SAGHITaFWr44LN81wwor4';
+    const CHAT_ID = '898318894';
+
+document.getElementById("order-btn").addEventListener("click", () => {
+    if (Object.keys(cart).length === 0) {
+        alert("Корзина порожня.");
+        return;
+    }
+
+    let message = "🛒 *Нове замовлення:*\n\n";
+    let total = 0;
+
+    for (const [name, item] of Object.entries(cart)) {
+        const itemTotal = item.quantity * item.price;
+        message += `• ${name} — ${item.quantity} × ${item.price}₴ = ${itemTotal}₴\n`;
+        total += itemTotal;
+    }
+
+    message += `\n💰 *Загальна сума:* ${total}₴`;
+
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown'
+        })
+    })
+    .then(res => res.ok ? alert("Замовлення надіслано!") : alert("Помилка при надсиланні"))
+    .catch(err => alert("Помилка з'єднання з Telegram"));
+});
+
+</script>
+
+</body>
+</html>
